@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Predict.fun Market Making Bot</title>
+    <link rel="stylesheet" href="/static/styles.css?v=20261015-english" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><div class="brand-logo">P</div><div><strong>Predict MM</strong><small>AUTO MARKET MAKER</small></div></div>
+        <div class="nav-label">Control center</div>
+        <nav class="nav" aria-label="Dashboard pages">
+          <button class="active" data-view="dashboard"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z" /></svg>Dashboard</button>
+          <button data-view="account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4.5 20c.8-4 3.3-6 7.5-6s6.7 2 7.5 6" /></svg>Account settings</button>
+          <button data-view="quotes"><svg viewBox="0 0 24 24"><path d="M4 7h16M7 4v6m10 4v6M4 17h16" /></svg>Quote settings<span id="market-count" class="nav-count">0</span></button>
+          <button data-view="logs"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" /></svg>Activity logs</button>
+        </nav>
+        <div class="sidebar-spacer"></div>
+        <div class="server-card"><strong>Dashboard online</strong><p id="sidebar-account">Checking account</p><small>Updates every 2 seconds</small></div>
+      </aside>
+
+      <main class="main"><div class="content">
+        <section id="notice" class="notice" hidden></section>
+
+        <section id="dashboard" class="view active">
+          <header class="topbar">
+            <div><p class="eyebrow">PREDICT.FUN CONTROL CENTER</p><h1>Dashboard</h1><p class="subtitle">Monitor your bot, orders, and risk settings</p></div>
+            <div class="actions"><div id="mode-badge" class="pill">Checking configuration</div><button id="start-button" class="btn primary">Start bot</button><button id="stop-button" class="btn secondary">Stop &amp; cancel orders</button></div>
+          </header>
+
+          <section class="metrics" aria-label="Bot status">
+            <article class="metric"><div class="metric-label">Bot status</div><strong id="run-status" class="metric-value warning">Not configured</strong><div id="run-status-note" class="metric-note">Loading bot status</div></article>
+            <article class="metric" title="On-chain USDT balance at the account address; excludes the value of prediction positions."><div class="metric-label">Account USDT balance</div><strong id="balance-value" class="metric-value">Loading…</strong><div id="balance-note" class="metric-note">Updates every 30 seconds</div></article>
+            <article class="metric"><div class="metric-label">Open orders</div><strong id="open-order-value" class="metric-value positive">0</strong><div id="open-order-note" class="metric-note">No orders managed by the bot</div></article>
+            <article class="metric"><div class="metric-label">Configured markets</div><strong id="market-value" class="metric-value">—</strong><div id="configured-note" class="metric-note">Waiting for configuration</div></article>
+            <article class="metric"><div class="metric-label">Session time remaining</div><strong id="expiry-value" class="metric-value">—</strong><div id="expiry-note" class="metric-note">Loading session duration</div></article>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="card orders-card">
+              <div class="card-head"><div><h2>Current orders</h2><p>Open orders currently managed by the bot</p></div><span id="open-orders-summary" class="summary">No open orders</span></div>
+              <div class="card-body table-wrap"><table><thead><tr><th>Market</th><th>Side</th><th>Price</th><th>Shares</th><th>Order age</th></tr></thead><tbody id="open-orders-list" aria-live="polite"></tbody></table></div>
+            </section>
+            <div class="stack">
+              <section class="card"><div class="card-head"><div><h2>Risk settings</h2><p>Saved position limits and fill protection</p></div><span class="status-badge"><span class="dot"></span>Loaded</span></div><div class="card-body risk-list">
+                <div class="risk-row"><strong>Total position limit</strong><span id="risk-total">—</span></div>
+                <div class="risk-row"><strong>Position limit per market</strong><span id="risk-market">—</span></div>
+                <div class="risk-row"><strong>Sell immediately after a buy fill</strong><span id="risk-emergency">—</span></div>
+              </div></section>
+              <section class="card"><div class="card-head"><div><h2>Recent logs</h2><p>Recent bot activity</p></div><button class="text-button" data-view-target="logs">All logs</button></div><div class="card-body"><pre id="dashboard-logs" class="log-preview" tabindex="0">Waiting for logs…</pre></div></section>
+            </div>
+          </div>
+          <div class="dashboard-actions"><button id="cancel-button" class="btn danger">Cancel orders in all markets</button></div>
+        </section>
+
+        <section id="account" class="view">
+          <header class="topbar"><div><p class="eyebrow">ACCOUNT</p><h1>Account settings</h1><p class="subtitle">Save account settings separately; saved keys are not shown in full</p></div><div id="account-badge" class="pill">Checking account</div></header>
+          <section class="card page-card form-card">
+            <div class="section-title"><div><h2>Predict.fun account</h2><p>JWT is generated and maintained automatically after saving</p></div><span id="secret-status" class="summary">Live trading keys not saved</span></div>
+            <form id="account-form">
+              <div class="form-grid">
+                <label class="field"><span>API Key</span><input name="api_key" type="password" autocomplete="off" placeholder="Leave blank to keep the saved value" /><small>Use the Predict account associated with your API Key</small></label>
+                <label class="field"><span>Wallet private key</span><input name="private_key" type="password" autocomplete="off" placeholder="EOA private key, or the exported Privy key for a Predict account" /><small>Not written to logs or uploaded to GitHub</small></label>
+                <label class="field"><span>Predict Account Address</span><input name="predict_account_address" placeholder="Predict account deposit address; leave blank for an EOA" /></label>
+                <label class="field"><span>Log level</span><select name="log_level"><option>INFO</option><option>DEBUG</option><option>WARNING</option><option>ERROR</option></select></label>
+              </div>
+              <p class="details-note">Saving generates a JWT automatically. For a Predict Account Address, the Privy wallet key signs for the smart wallet; otherwise the EOA key is used. The private key stays on the computer running the bot.</p>
+              <div class="form-actions"><button class="btn primary" type="submit">Save account settings</button></div>
+            </form>
+          </section>
+          <section class="card page-card form-card approval-panel" aria-labelledby="approval-heading">
+            <div class="section-title"><div><h2 id="approval-heading">Trading approvals</h2><p>Required for live trading; checking does not place orders</p></div><strong id="approval-status" class="summary">Not checked</strong></div>
+            <div id="approval-steps" class="approval-steps" aria-live="polite"></div><div id="gas-wallet" class="gas-wallet" hidden></div>
+            <p class="details-note">Setting approvals sends on-chain transactions. The Privy signing wallet (or EOA in EOA mode) pays BNB Chain gas.</p>
+            <div class="form-actions"><button id="check-approvals" class="btn secondary" type="button">Check approvals</button><button id="set-approvals" class="btn danger" type="button">Set approvals</button></div>
+          </section>
+        </section>
+
+        <section id="quotes" class="view">
+          <header class="topbar"><div><p class="eyebrow">QUOTE SETTINGS</p><h1>Quote settings</h1><p class="subtitle">Manage markets, order sizes, and refresh rules</p></div><button id="add-market-button" class="btn primary" type="button">＋ Add market</button></header>
+          <form id="setup-form">
+            <section class="card form-card"><div class="section-title"><div><h2>Markets to quote</h2><p>Choose Yes or No to quote that outcome only; choose Yes &amp; No to quote both</p></div><span id="configured-market-summary" class="summary">No markets configured</span></div><div id="markets-list" class="market-list"></div><div class="form-actions"><button id="add-market-bottom-button" class="btn primary" type="button">＋ Add market</button></div></section>
+            <section class="card form-card"><div class="section-title"><div><h2>Positions &amp; refresh</h2><p>Risk limits shared across all markets</p></div></div>
+              <div class="form-grid three-columns">
+                <label class="field"><span>Position limit per market</span><input name="max_position_per_market" inputmode="decimal" value="10.0" required /></label>
+                <label class="field"><span>Total position limit</span><input name="max_total_position" inputmode="decimal" value="50.0" required /></label>
+                <label class="field"><span class="label-with-help">Order lifetime (seconds) <span class="tooltip" tabindex="0">?<span class="tooltip-text" role="tooltip">Price proximity triggers immediate cancellation regardless of this lifetime. If the best bid, best ask, and target quote are unchanged at the end of the lifetime, an order may stay for one extra period of the same length. It is canceled and requoted after the second period.</span></span></span><input name="cancel_after_seconds" inputmode="decimal" value="60" required /></label>
+              </div>
+              <div class="switch-row duration-setting-row">
+                <span class="duration-setting-copy"><strong>Set session duration</strong><small>The countdown starts each time the bot starts. When it ends, cancel all orders and stop the bot</small></span>
+                <label class="switch-control" title="Enable session duration"><input id="run-duration-enabled" type="checkbox" name="run_duration_enabled" /><i></i></label>
+                <div id="run-duration-fields" class="duration-picker" aria-label="Session duration">
+                  <select name="run_duration_hours" aria-label="Duration hours"></select>
+                  <select name="run_duration_minutes" aria-label="Duration minutes"></select>
+                </div>
+              </div>
+              <label class="switch-row"><span><strong>Sell immediately after a buy fill</strong><small>Applies to Yes and No; fill protection pauses quoting in the affected market</small></span><span class="switch-control"><input type="checkbox" name="emergency_exit_on_buy_fill" checked /><i></i></span><span class="tooltip" tabindex="0">?<span class="tooltip-text" role="tooltip">Live trading only. After a buy fill, including a partial fill, cancel other orders in that market and submit a non-post-only limit sell. The limit is 0.001 when the market tick is 0.001, otherwise 0.01. This may cause a loss.</span></span></label>
+              <label class="switch-row"><span><strong>Dry run</strong><small>Calculate quotes and record logs without placing real orders</small></span><span class="switch-control"><input type="checkbox" name="dry_run" /><i></i></span></label>
+              <label class="switch-row"><span><strong>Bid depth protection</strong><small>Prioritize cancellation when bids ahead are thin or shrink quickly; resume through normal scheduling after recovery</small></span><span class="switch-control"><input type="checkbox" name="depth_enabled" checked /><i></i></span></label>
+              <details class="depth-protection-settings">
+                <summary>Depth protection thresholds</summary>
+                <p class="details-note">Q is your order size. D is the total external bid size strictly above your buy price, excluding your own orders. Cancellation and recovery thresholds use the greater of the minimum shares and the multiplier × Q. Yes and No are checked separately, including orders at the minimum tick.</p>
+                <div class="form-grid three-columns">
+                  <label class="field"><span>Minimum depth before cancellation (shares)</span><input name="depth_cancel_min_shares" type="number" min="0.01" step="any" value="200" required /></label>
+                  <label class="field"><span>Cancellation size multiplier</span><input name="depth_cancel_size_multiplier" type="number" min="0.01" step="any" value="2" required /></label>
+                  <label class="field"><span>Depth decline lookback (seconds)</span><input name="depth_drop_window_seconds" type="number" min="0.01" max="300" step="any" value="2" required /></label>
+                  <label class="field"><span>Minimum depth to resume (shares)</span><input name="depth_resume_min_shares" type="number" min="0.01" step="any" value="400" required /></label>
+                  <label class="field"><span>Recovery size multiplier</span><input name="depth_resume_size_multiplier" type="number" min="0.01" step="any" value="4" required /></label>
+                  <label class="field"><span>Depth decline (%)</span><input name="depth_drop_percent" type="number" min="0.01" max="100" step="any" value="50" required /></label>
+                  <label class="field"><span>Recovery stability (seconds)</span><input name="depth_stable_seconds" type="number" min="0.01" max="300" step="any" value="3" required /></label>
+                  <label class="field"><span>Cooldown after cancellation (seconds)</span><input name="depth_cooldown_seconds" type="number" min="0.01" max="300" step="any" value="10" required /></label>
+                </div>
+                <p class="details-note">A rapid decline must meet both the percentage threshold and the low remaining-depth condition. The lookback is not the polling interval. Resuming requires cooldown and stable depth, with another check before submission. This may reduce quoting and cannot guarantee that orders will not fill.</p>
+              </details>
+              <div class="form-actions"><button class="btn primary" type="submit">Save quote settings</button></div>
+            </section>
+          </form>
+        </section>
+
+        <section id="logs-view" class="view" data-view-name="logs">
+          <header class="topbar"><div><p class="eyebrow">SYSTEM LOGS</p><h1>Activity logs</h1><p class="subtitle">View the full record of bot activity, orders, and fill protection</p></div><div class="actions"><span id="log-refresh-status" class="status-badge"><span class="dot"></span><span id="log-refresh-status-text">Updates every 2 seconds</span></span><button id="refresh-logs" class="btn primary">Refresh</button></div></header>
+          <section class="card page-card"><div class="card-head"><div><h2>Live logs</h2><p>Click the logs or select text to pause updates; click outside to resume</p></div></div><div class="card-body"><pre id="logs" class="full-log" tabindex="0">Waiting for logs…</pre></div></section>
+        </section>
+      </div></main>
+    </div>
+
+    <template id="market-template">
+      <article class="market-row">
+        <div class="market-row-heading"><strong class="market-title">Market</strong><button class="text-button remove-market" type="button">Remove</button></div>
+        <div class="market-fields">
+          <label class="field market-id-field"><span class="label-with-help">Predict.fun market URL <span class="tooltip" tabindex="0">?<span class="tooltip-text" role="tooltip">Paste a full Predict.fun market URL and click Identify URL. After selection, the market name appears here; the bot keeps the Market ID for trading.</span></span></span><div class="market-id-input"><input data-field="market_reference" required placeholder="Paste a Predict.fun market URL" /><input data-field="market_id" type="hidden" /><button class="btn secondary resolve-market" type="button">Identify URL</button></div><div class="selected-market" data-field="selected_market" hidden></div><div class="market-lookup-result" data-field="market_lookup" hidden></div></label>
+          <label class="field"><span>Outcome to quote</span><select data-field="outcome"><option>YES</option><option>NO</option><option value="YES_NO">Yes &amp; No (both)</option></select></label>
+          <label class="field"><span>Order size (shares)</span><input data-field="quote_size" inputmode="decimal" value="100" required /></label>
+        </div>
+      </article>
+    </template>
+  <script src="/static/i18n.js?v=20261015-english"></script>
+  <script src="/static/app.js?v=20261015-english"></script>
+  </body>
+</html>

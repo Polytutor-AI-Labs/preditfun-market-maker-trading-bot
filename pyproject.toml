@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "predict-mm-bot"
+version = "0.1.0"
+description = "Dry-run-first market making bot scaffold for Predict.fun style prediction markets."
+requires-python = ">=3.11"
+dependencies = [
+  "eth-account>=0.13,<1.0",
+  "fastapi>=0.115,<1.0",
+  "predict-sdk>=0.0.20",
+  "requests>=2.32,<3.0",
+  "uvicorn[standard]>=0.30,<1.0",
+  "websockets>=15.0,<16.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+desktop = [
+  "pywebview>=5,<7",
+]
+windows-build = [
+  "pyinstaller>=6,<7",
+]
+
+[tool.setuptools.packages.find]
+include = ["predict_mm*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

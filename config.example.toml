@@ -1,0 +1,41 @@
+dry_run = false
+poll_interval_seconds = 2.0
+cancel_after_seconds = 60.0
+replace_on_orderbook_change = true
+cancel_all_on_start = true
+cancel_all_on_shutdown = true
+emergency_exit_on_buy_fill = true
+
+[[markets]]
+id = "example-market-id"
+enabled = true
+outcome = "YES"
+quote_size = "1.0"
+# Optional. If omitted, the bot will try GET /v1/markets/{id}.
+token_id = ""
+
+[depth_protection]
+enabled = true
+cancel_min_shares = "200"
+cancel_size_multiplier = "2"
+resume_min_shares = "400"
+resume_size_multiplier = "4"
+drop_window_seconds = 2
+drop_percent = "50"
+stable_seconds = 3
+cooldown_seconds = 10
+
+[strategy]
+tick_size = "0.001"
+quote_size = "1.0"
+join_best_price = false
+min_edge_ticks = 2
+max_spread_to_quote = "0.20"
+min_spread_to_quote = "0.006"
+
+[risk]
+max_order_size = "1.0"
+max_position_per_market = "10.0"
+max_total_position = "50.0"
+max_open_orders_per_market = 2
+pause_after_fill_seconds = 60
